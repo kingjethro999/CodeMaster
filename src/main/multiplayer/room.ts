@@ -36,7 +36,7 @@ interface HostPlayerConn {
   buffer: string
 }
 
-class HostSession {
+export class HostSession {
   private state: RoomState
   private udp: dgram.Socket
   private server: net.Server
@@ -60,7 +60,10 @@ class HostSession {
   playerFinished(): void {
     this.state.players = this.state.players.map((p) =>
       p.id === this.state.hostId
-        ? { ...p, finishedAt: p.finishedAt ?? new Date().toISOString() }
+        ? {
+            ...p,
+            finishedAt: p.finishedAt ?? new Date().toISOString()
+          }
         : p
     )
     this.broadcast()
@@ -68,7 +71,12 @@ class HostSession {
 
   playerCompleted(): void {
     this.state.players = this.state.players.map((p) =>
-      p.id === this.state.hostId ? { ...p, completed: p.completed + 1 } : p
+      p.id === this.state.hostId
+        ? {
+            ...p,
+            completed: p.completed + 1
+          }
+        : p
     )
     this.broadcast()
   }
@@ -87,7 +95,14 @@ class HostSession {
       roomCode: settings.hostCode,
       hostId,
       settings,
-      players: [{ id: hostId, name: hostName, joinedAt: new Date().toISOString(), completed: 0 }]
+      players: [
+        {
+          id: hostId,
+          name: hostName,
+          joinedAt: new Date().toISOString(),
+          completed: 0
+        }
+      ]
     }
     this.udp = dgram.createSocket('udp4')
     this.server = net.createServer()
@@ -156,11 +171,17 @@ class HostSession {
         const name = String(msg.name ?? 'Player')
         const code = String(msg.roomCode ?? '')
         if (code !== this.state.roomCode) {
-          this.send(socket, { type: 'error', message: 'Wrong room code.' })
+          this.send(socket, {
+            type: 'error',
+            message: 'Wrong room code.'
+          })
           return
         }
         if (this.state.players.length >= this.state.settings.maxPlayers) {
-          this.send(socket, { type: 'error', message: 'Room is full.' })
+          this.send(socket, {
+            type: 'error',
+            message: 'Room is full.'
+          })
           return
         }
         const player: RoomPlayer = {
@@ -169,10 +190,18 @@ class HostSession {
           joinedAt: new Date().toISOString(),
           completed: 0
         }
-        this.conns.set(player.id, { socket, player, buffer: '' })
+        this.conns.set(player.id, {
+          socket,
+          player,
+          buffer: ''
+        })
         this.state.players.push(player)
         this.broadcast()
-        this.send(socket, { type: 'welcome', playerId: player.id, state: this.state })
+        this.send(socket, {
+          type: 'welcome',
+          playerId: player.id,
+          state: this.state
+        })
         break
       }
       case 'start': {
@@ -228,7 +257,11 @@ class HostSession {
   }
 
   private broadcast(): void {
-    const payload = JSON.stringify({ type: 'state', state: this.state }) + '\n'
+    const payload =
+      JSON.stringify({
+        type: 'state',
+        state: this.state
+      }) + '\n'
     for (const conn of this.conns.values()) conn.socket.write(payload)
     this.emitter.emit('state', this.state)
   }
@@ -240,11 +273,6 @@ class HostSession {
 }
 
 // ---- Client side ---------------------------------------------------------
-
-interface ClientConn {
-  socket: net.Socket
-  buffer: string
-}
 
 export class ClientSession {
   private socket: net.Socket
@@ -262,10 +290,17 @@ export class ClientSession {
     this.emitter = new EventEmitter()
     this.emitter.on('state', onState)
     this.emitter.on('error', onError)
-    this.socket = net.createConnection({ host: host.address, port: host.port })
+    this.socket = net.createConnection({
+      host: host.address,
+      port: host.port
+    })
     this.socket.setEncoding('utf8')
     this.socket.on('connect', () => {
-      this.send({ type: 'join', name, roomCode })
+      this.send({
+        type: 'join',
+        name,
+        roomCode
+      })
     })
     this.socket.on('data', (chunk: string) => {
       this.buffer += chunk
@@ -301,19 +336,27 @@ export class ClientSession {
   }
 
   startMatch(): void {
-    this.send({ type: 'start' })
+    this.send({
+      type: 'start'
+    })
   }
 
   reportFinished(): void {
-    this.send({ type: 'finished' })
+    this.send({
+      type: 'finished'
+    })
   }
 
   reportCompleted(): void {
-    this.send({ type: 'completed' })
+    this.send({
+      type: 'completed'
+    })
   }
 
   endMatch(): void {
-    this.send({ type: 'end' })
+    this.send({
+      type: 'end'
+    })
   }
 
   close(): void {

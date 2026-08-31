@@ -85,7 +85,11 @@ export function localHint(concept: string, tier: number): string {
   return ladder[Math.min(tier, ladder.length - 1)]
 }
 
-export function localExplainCheck(explanation: string, keywords: string[], concept: string): string {
+export function localExplainCheck(
+  explanation: string,
+  keywords: string[],
+  _concept: string
+): string {
   const text = explanation.toLowerCase()
   const missing = keywords.filter((k) => !text.includes(k.toLowerCase()))
   if (missing.length === 0) {

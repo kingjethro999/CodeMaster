@@ -31,7 +31,9 @@ export function Resources(): React.JSX.Element {
   const [items, setItems] = useState<ResourceEntry[]>([])
   const [filter, setFilter] = useState<'all' | ResourceEntry['kind']>('all')
 
-  const activePath: CareerPathId | null = isGuest ? (guestPath as CareerPathId | null) : (activeProfile?.careerPath ?? null)
+  const activePath: CareerPathId | null = isGuest
+    ? (guestPath as CareerPathId | null)
+    : (activeProfile?.careerPath ?? null)
 
   useEffect(() => {
     void window.api.resources.list().then((r) => setItems(r as ResourceEntry[]))
@@ -45,23 +47,54 @@ export function Resources(): React.JSX.Element {
   }
 
   return (
-    <div className="col" style={{ gap: 20 }}>
+    <div
+      className="col"
+      role="main"
+      aria-label={t('resources.title')}
+      style={{
+        gap: 20
+      }}
+    >
       <div className="row spread wrap">
-        <button className="btn btn-ghost" onClick={() => go({ name: 'home' })}>
+        <button
+          className="btn btn-ghost"
+          aria-label={t('common.back')}
+          onClick={() =>
+            go({
+              name: 'home'
+            })
+          }
+        >
           <ArrowLeft size={18} /> {t('common.back')}
         </button>
-        <div className="col center" style={{ gap: 2 }}>
+        <div
+          className="col center"
+          style={{
+            gap: 2
+          }}
+        >
           <h2>{t('resources.title')}</h2>
           <span className="muted">{t('resources.subtitle')}</span>
         </div>
-        <div className="row" style={{ gap: 8 }}>
+        <div
+          className="row"
+          style={{
+            gap: 8
+          }}
+        >
           {(['all', 'book', 'video', 'docs'] as const).map((k) => (
             <button
               key={k}
               className={`chip ${filter === k ? 'selected' : ''}`}
+              aria-label={k === 'all'
+                ? t('resources.all')
+                : t(`resources.${k === 'book' ? 'books' : k === 'video' ? 'videos' : 'docs'}`)}
+              aria-pressed={filter === k}
               onClick={() => setFilter(k)}
             >
-              {k === 'all' ? t('resources.all') : t(`resources.${k === 'book' ? 'books' : k === 'video' ? 'videos' : 'docs'}`)}
+              {k === 'all'
+                ? t('resources.all')
+                : t(`resources.${k === 'book' ? 'books' : k === 'video' ? 'videos' : 'docs'}`)}
             </button>
           ))}
         </div>
@@ -74,20 +107,66 @@ export function Resources(): React.JSX.Element {
         </div>
       )}
 
-      <div className="col" style={{ gap: 12 }}>
+      <div
+        className="col"
+        style={{
+          gap: 12
+        }}
+      >
         {shown.map((r) => (
           <div key={r.id} className="card-flat row spread wrap">
-            <div className="row" style={{ gap: 14 }}>
-              <span className="path-icon" style={{ background: 'var(--accent-yellow)', width: 44, height: 44 }}>
+            <div
+              className="row"
+              style={{
+                gap: 14
+              }}
+            >
+              <span
+                className="path-icon"
+                style={{
+                  background: 'var(--accent-yellow)',
+                  width: 44,
+                  height: 44
+                }}
+              >
                 {KIND_ICON[r.kind]}
               </span>
-              <div className="col" style={{ gap: 2 }}>
-                <strong style={{ fontFamily: 'var(--font-display)', fontSize: 16 }}>{r.title}</strong>
-                <span className="muted" style={{ fontSize: 14 }}>
+              <div
+                className="col"
+                style={{
+                  gap: 2
+                }}
+              >
+                <strong
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 16
+                  }}
+                >
+                  {r.title}
+                </strong>
+                <span
+                  className="muted"
+                  style={{
+                    fontSize: 14
+                  }}
+                >
                   {r.creator}
                 </span>
-                <span style={{ fontSize: 14 }}>{r.why}</span>
-                <div className="row wrap" style={{ gap: 6, marginTop: 4 }}>
+                <span
+                  style={{
+                    fontSize: 14
+                  }}
+                >
+                  {r.why}
+                </span>
+                <div
+                  className="row wrap"
+                  style={{
+                    gap: 6,
+                    marginTop: 4
+                  }}
+                >
                   {r.tags.map((tag) => (
                     <span key={tag} className="lang-tag">
                       {tag}
@@ -96,7 +175,7 @@ export function Resources(): React.JSX.Element {
                 </div>
               </div>
             </div>
-            <button className="btn btn-info" onClick={() => openResource(r)}>
+            <button className="btn btn-info" aria-label={`${t('resources.open')}: ${r.title}`} onClick={() => openResource(r)}>
               <ExternalLink size={18} /> {t('resources.open')}
             </button>
           </div>
