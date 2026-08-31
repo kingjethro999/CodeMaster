@@ -5,8 +5,14 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, GripVertical } from 'lucide-react'
 import type { BlockNode, Stage } from '../../../shared/types'
-import { BLOCK_ARG_DEFAULTS, BLOCK_ARG_KEY, BLOCK_ARG_OPTIONS, BLOCK_LIBRARY } from '../../../shared/blocklib'
+import {
+  BLOCK_ARG_DEFAULTS,
+  BLOCK_ARG_KEY,
+  BLOCK_ARG_OPTIONS,
+  BLOCK_LIBRARY
+} from '../../../shared/blocklib'
 import { blocksToCode } from '../../../shared/interpreter'
+import { Select } from './Select'
 
 let idCounter = 0
 function nextId(): string {
@@ -17,7 +23,12 @@ function makeNode(type: string): BlockNode {
   const tpl = BLOCK_LIBRARY[type]
   const args: Record<string, string> = {}
   for (const k of tpl.argKeys ?? []) args[k] = BLOCK_ARG_DEFAULTS[k] ?? ''
-  return { id: nextId(), type, args, children: [] }
+  return {
+    id: nextId(),
+    type,
+    args,
+    children: []
+  }
 }
 
 function collectTypes(blocks: BlockNode[]): string[] {
@@ -36,7 +47,12 @@ function updateInList(list: BlockNode[], id: string, fn: (n: BlockNode) => Block
   return list.map((n) => {
     if (n.id === id) return fn(n)
     const children = updateInList(n.children, id, fn)
-    return children === n.children ? n : { ...n, children }
+    return children === n.children
+      ? n
+      : {
+          ...n,
+          children
+        }
   })
 }
 
@@ -53,7 +69,14 @@ function isWrapper(type: string): boolean {
   return type === 'repeat' || type === 'ifBlock'
 }
 
-function insertAfter(list: BlockNode[], toId: string, node: BlockNode, foundRef: { found: boolean }): BlockNode[] {
+function insertAfter(
+  list: BlockNode[],
+  toId: string,
+  node: BlockNode,
+  foundRef: {
+    found: boolean
+  }
+): BlockNode[] {
   const result: BlockNode[] = []
   for (const b of list) {
     result.push(b)
@@ -62,10 +85,15 @@ function insertAfter(list: BlockNode[], toId: string, node: BlockNode, foundRef:
       result.push(node)
       foundRef.found = true
     } else if (b.children.length) {
-      const childFound = { found: false }
+      const childFound = {
+        found: false
+      }
       const children = insertAfter(b.children, toId, node, childFound)
       if (childFound.found) {
-        result[result.length - 1] = { ...b, children }
+        result[result.length - 1] = {
+          ...b,
+          children
+        }
         foundRef.found = true
       }
     }
@@ -81,9 +109,14 @@ function moveInList(list: BlockNode[], fromId: string, toId: string | null): Blo
   const target = findNode(withoutSource, toId)
   if (!target) return withoutSource
   if (isWrapper(target.type)) {
-    return updateInList(withoutSource, toId, (n) => ({ ...n, children: [...n.children, source] }))
+    return updateInList(withoutSource, toId, (n) => ({
+      ...n,
+      children: [...n.children, source]
+    }))
   }
-  return insertAfter(withoutSource, toId, source, { found: false })
+  return insertAfter(withoutSource, toId, source, {
+    found: false
+  })
 }
 
 function findNode(list: BlockNode[], id: string): BlockNode | undefined {
@@ -130,13 +163,19 @@ export function BlockEditor({
   }
 
   const addChild = (parentId: string, type: string): void => {
-    const next = updateInList(blocks, parentId, (n) => ({ ...n, children: [...n.children, makeNode(type)] }))
+    const next = updateInList(blocks, parentId, (n) => ({
+      ...n,
+      children: [...n.children, makeNode(type)]
+    }))
     setBlocks(next)
     emit(next)
   }
 
   const updateBlock = (id: string, patch: Partial<BlockNode>): void => {
-    const next = updateInList(blocks, id, (n) => ({ ...n, ...patch }))
+    const next = updateInList(blocks, id, (n) => ({
+      ...n,
+      ...patch
+    }))
     setBlocks(next)
     emit(next)
   }
@@ -186,25 +225,38 @@ export function BlockEditor({
     const inner = (
       <>
         <div className="block-head">
-          <span style={{ display: 'inline-flex' }} draggable onDragStart={(e) => { e.dataTransfer.setData('text/plain', node.id); setDragId(node.id) }}>
+          <span
+            style={{
+              display: 'inline-flex'
+            }}
+            draggable
+            onDragStart={(e) => {
+              e.dataTransfer.setData('text/plain', node.id)
+              setDragId(node.id)
+            }}
+          >
             <GripVertical size={16} />
           </span>
           {t(tpl.labelKey)}
           {(tpl.argKeys ?? []).map((k) =>
             BLOCK_ARG_OPTIONS[k] ? (
-              <select
+              <Select
                 key={k}
-                className="block-input"
+                compact
                 value={node.args[k]}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => updateBlock(node.id, { args: { ...node.args, [k]: e.target.value } })}
-              >
-                {BLOCK_ARG_OPTIONS[k].map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) =>
+                  updateBlock(node.id, {
+                    args: {
+                      ...node.args,
+                      [k]: v
+                    }
+                  })
+                }
+                options={BLOCK_ARG_OPTIONS[k].map((opt) => ({
+                  value: opt,
+                  label: opt
+                }))}
+              />
             ) : (
               <input
                 key={k}
@@ -212,14 +264,26 @@ export function BlockEditor({
                 placeholder={t(`block.${BLOCK_ARG_KEY[k]}`)}
                 value={node.args[k] ?? ''}
                 onClick={(e) => e.stopPropagation()}
-                onChange={(e) => updateBlock(node.id, { args: { ...node.args, [k]: e.target.value } })}
+                onChange={(e) =>
+                  updateBlock(node.id, {
+                    args: {
+                      ...node.args,
+                      [k]: e.target.value
+                    }
+                  })
+                }
               />
             )
           )}
           <button
             aria-label={t('common.cancel')}
             className="icon-btn"
-            style={{ background: 'rgba(255,255,255,0.2)', boxShadow: 'none', width: 28, height: 28 }}
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              boxShadow: 'none',
+              width: 28,
+              height: 28
+            }}
             onClick={(e) => {
               e.stopPropagation()
               removeBlock(node.id)
@@ -255,7 +319,9 @@ export function BlockEditor({
     return (
       <div
         className={`block ${isWrapper ? 'wrapper' : ''}`}
-        style={{ background: tpl.color }}
+        style={{
+          background: tpl.color
+        }}
         draggable
         onDragStart={(e) => {
           e.dataTransfer.setData('text/plain', node.id)
@@ -290,7 +356,10 @@ export function BlockEditor({
               tabIndex={0}
               aria-label={t(tpl.labelKey)}
               className="block"
-              style={{ background: tpl.color, cursor: 'pointer' }}
+              style={{
+                background: tpl.color,
+                cursor: 'pointer'
+              }}
               draggable
               onDragStart={(e) => {
                 e.dataTransfer.setData('application/x-cm-block', type)

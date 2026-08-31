@@ -24,6 +24,34 @@ export const IPC = {
     recordAttempt: 'ai:recordAttempt',
     checkExplanation: 'ai:checkExplanation'
   },
+  streak: {
+    get: 'streak:get',
+    recordCompletion: 'streak:recordCompletion',
+    increment: 'streak:increment',
+    reset: 'streak:reset',
+    useFreeze: 'streak:useFreeze',
+    addFreeze: 'streak:addFreeze'
+  },
+  xp: {
+    get: 'xp:get',
+    add: 'xp:add'
+  },
+  energy: {
+    get: 'energy:get',
+    spend: 'energy:spend',
+    refund: 'energy:refund',
+    refillIfDue: 'energy:refillIfDue'
+  },
+  quests: {
+    get: 'quests:get',
+    upsert: 'quests:upsert',
+    updateProgress: 'quests:updateProgress',
+    claim: 'quests:claim'
+  },
+  achievements: {
+    list: 'achievements:list',
+    grant: 'achievements:grant'
+  },
   resources: {
     list: 'resources:list'
   },

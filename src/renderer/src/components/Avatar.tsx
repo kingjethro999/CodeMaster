@@ -17,7 +17,18 @@ const COLORS: Record<string, string> = {
 
 function Critter({ id, size }: { id: string; size: number }): React.JSX.Element {
   if (id === 'panda') {
-    return <img src={mascotImg} alt="panda" style={{ width: size, height: size }} className="avatar-img" draggable={false} />
+    return (
+      <img
+        src={mascotImg}
+        alt="panda"
+        style={{
+          width: size,
+          height: size
+        }}
+        className="avatar-img"
+        draggable={false}
+      />
+    )
   }
   const c = COLORS[id] ?? '#FF8A3D'
   return (
@@ -75,7 +86,12 @@ export function Avatar({
   return (
     <div
       className={className}
-      style={{ width: size, height: size, overflow: 'hidden', borderRadius: '50%' }}
+      style={{
+        width: size,
+        height: size,
+        overflow: 'hidden',
+        borderRadius: '50%'
+      }}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}

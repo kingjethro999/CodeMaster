@@ -13,6 +13,8 @@ export interface ProfileSettings {
   reducedMotion: boolean
   reducedSound: boolean
   highContrast: boolean
+  colorBlind: boolean
+  audioSpeed: number
   textScale: number
 }
 
@@ -91,6 +93,86 @@ export interface Progress {
   explanation?: string
   explanationCheck?: 'pass' | 'fail' | 'pending'
   completedAt?: string
+}
+
+export interface Streak {
+  profileId: number
+  currentCompletionStreak: number
+  bestCompletionStreak: number
+  currentDailyStreak: number
+  bestDailyStreak: number
+  lastActiveDate: string | null
+  streakFreezes: number
+}
+
+export interface XPWallet {
+  profileId: number
+  totalXp: number
+  level: number
+  levelXp: number
+}
+
+export interface EnergyState {
+  profileId: number
+  currentEnergy: number
+  maxEnergy: number
+  lastRefillDate: string | null
+}
+
+export type QuestType =
+  'complete_stages' | 'no_hints' | 'streak_maintain' | 'use_blocks' | 'first_try'
+
+export interface DailyQuest {
+  id: string
+  profileId: number
+  date: string
+  questType: QuestType
+  descriptionKey: string
+  target: number
+  progress: number
+  completed: boolean
+  claimed: boolean
+  rewardXp: number
+}
+
+export type AchievementTier = 'bronze' | 'silver' | 'gold'
+
+export interface AchievementDef {
+  id: string
+  nameKey: string
+  descriptionKey: string
+  icon: string
+  tier: AchievementTier
+}
+
+export const ACHIEVEMENT_DEFS: AchievementDef[] = [
+  { id: 'first_stage', nameKey: 'achievement.firstStage', descriptionKey: 'achievement.firstStageDesc', icon: 'Star', tier: 'bronze' },
+  { id: 'streak_3', nameKey: 'achievement.streak3', descriptionKey: 'achievement.streak3Desc', icon: 'Flame', tier: 'bronze' },
+  { id: 'streak_7', nameKey: 'achievement.streak7', descriptionKey: 'achievement.streak7Desc', icon: 'Flame', tier: 'silver' },
+  { id: 'streak_30', nameKey: 'achievement.streak30', descriptionKey: 'achievement.streak30Desc', icon: 'Flame', tier: 'gold' },
+  { id: 'xp_100', nameKey: 'achievement.xp100', descriptionKey: 'achievement.xp100Desc', icon: 'Zap', tier: 'bronze' },
+  { id: 'xp_500', nameKey: 'achievement.xp500', descriptionKey: 'achievement.xp500Desc', icon: 'Zap', tier: 'silver' },
+  { id: 'xp_1000', nameKey: 'achievement.xp1000', descriptionKey: 'achievement.xp1000Desc', icon: 'Zap', tier: 'gold' },
+  { id: 'no_hints_5', nameKey: 'achievement.noHints5', descriptionKey: 'achievement.noHints5Desc', icon: 'Lightbulb', tier: 'bronze' },
+  { id: 'no_hints_10', nameKey: 'achievement.noHints10', descriptionKey: 'achievement.noHints10Desc', icon: 'Lightbulb', tier: 'silver' },
+  { id: 'path_complete', nameKey: 'achievement.pathComplete', descriptionKey: 'achievement.pathCompleteDesc', icon: 'Trophy', tier: 'gold' },
+  { id: 'explainer', nameKey: 'achievement.explainer', descriptionKey: 'achievement.explainerDesc', icon: 'MessageCircle', tier: 'bronze' },
+  { id: 'explainer_10', nameKey: 'achievement.explainer10', descriptionKey: 'achievement.explainer10Desc', icon: 'MessageCircle', tier: 'silver' },
+]
+
+export interface Achievement {
+  profileId: number
+  achievementId: string
+  earnedAt: string
+}
+
+export type RewardType = 'xp' | 'streak_freeze' | 'energy' | 'achievement'
+
+export interface RewardCard {
+  type: RewardType
+  value: number
+  labelKey: string
+  icon: string
 }
 
 export interface CurriculumProgress {

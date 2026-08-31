@@ -1,14 +1,20 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 import type {
+  Achievement,
   AISession,
   CareerPath,
+  DailyQuest,
   DiscoveryHost,
+  EnergyState,
   Profile,
   ProfileInput,
   Progress,
+  QuestType,
   RoomSettings,
   RoomState,
-  Stage
+  Stage,
+  Streak,
+  XPWallet
 } from '../shared/types'
 
 export interface Api {
@@ -27,7 +33,11 @@ export interface Api {
   progress: {
     get: (profileId: number, stageKey: string) => Promise<Progress | undefined>
     listForProfile: (profileId: number) => Promise<Record<string, Progress>>
-    upsert: (profileId: number, stageKey: string, patch: Record<string, unknown>) => Promise<Progress>
+    upsert: (
+      profileId: number,
+      stageKey: string,
+      patch: Record<string, unknown>
+    ) => Promise<Progress>
   }
   ai: {
     getSession: (profileId: number, stageKey: string) => Promise<AISession>
@@ -38,7 +48,10 @@ export interface Api {
       stageKey: string,
       explanation: string,
       source: string
-    ) => Promise<{ passed: boolean; feedback: string }>
+    ) => Promise<{
+      passed: boolean
+      feedback: string
+    }>
   }
   resources: {
     list: (path?: string) => Promise<
@@ -53,6 +66,38 @@ export interface Api {
         tags: string[]
       }[]
     >
+  }
+  streak: {
+    get: (profileId: number) => Promise<Streak>
+    recordCompletion: (profileId: number) => Promise<Streak>
+    increment: (profileId: number) => Promise<Streak>
+    reset: (profileId: number) => Promise<Streak>
+    useFreeze: (profileId: number) => Promise<Streak>
+    addFreeze: (profileId: number, count: number) => Promise<Streak>
+  }
+  xp: {
+    get: (profileId: number) => Promise<XPWallet>
+    add: (profileId: number, amount: number) => Promise<XPWallet>
+  }
+  energy: {
+    get: (profileId: number) => Promise<EnergyState>
+    spend: (profileId: number) => Promise<EnergyState>
+    refund: (profileId: number) => Promise<EnergyState>
+    refillIfDue: (profileId: number) => Promise<EnergyState>
+  }
+  quests: {
+    get: (profileId: number, date?: string) => Promise<DailyQuest[]>
+    upsert: (profileId: number, quests: Omit<DailyQuest, 'profileId' | 'date'>[]) => Promise<void>
+    updateProgress: (
+      profileId: number,
+      questType: QuestType,
+      increment: number
+    ) => Promise<DailyQuest[]>
+    claim: (profileId: number, questId: string) => Promise<DailyQuest | undefined>
+  }
+  achievements: {
+    list: (profileId: number) => Promise<Achievement[]>
+    grant: (profileId: number, achievementId: string) => Promise<boolean>
   }
   multiplayer: {
     host: (settings: RoomSettings, hostName: string) => Promise<RoomState>
@@ -69,7 +114,10 @@ export interface Api {
     getLang: () => Promise<string>
     setLang: (lang: string) => Promise<void>
     online: () => Promise<boolean>
-    getInfo: () => Promise<{ version: string; groq: boolean }>
+    getInfo: () => Promise<{
+      version: string
+      groq: boolean
+    }>
   }
 }
 

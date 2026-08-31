@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 export function CodeEditor({
-  starter,
+  starter: _starter,
   value,
   onChange,
   onSubmit
@@ -24,12 +24,21 @@ export function CodeEditor({
   }, [])
 
   return (
-    <div className="col" style={{ gap: 8 }}>
+    <div
+      className="col"
+      style={{
+        gap: 8
+      }}
+    >
       <span className="field-label">{t('stage.yourCode')}</span>
       <textarea
         ref={ref}
         className="textarea"
-        style={{ fontFamily: 'var(--font-mono)', fontSize: 15, minHeight: 260 }}
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 15,
+          minHeight: 260
+        }}
         value={value}
         spellCheck={false}
         onChange={(e) => onChange(e.target.value)}

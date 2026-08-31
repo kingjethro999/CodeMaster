@@ -3,13 +3,20 @@
 import { BrowserWindow, ipcMain } from 'electron'
 import { IPC } from '../shared/ipc'
 import type {
+  Achievement,
   AISession,
   CareerPath,
+  DailyQuest,
   DiscoveryHost,
+  EnergyState,
   Profile,
   ProfileInput,
+  QuestType,
   RoomSettings,
-  Stage
+  RoomState,
+  Stage,
+  Streak,
+  XPWallet
 } from '../shared/types'
 import * as repo from './db/repo'
 import { getSetting, setSetting } from './db/index'
@@ -32,10 +39,13 @@ export function registerIpc(): void {
   // Profiles
   ipcMain.handle(IPC.profiles.list, (): Profile[] => repo.listProfiles())
   ipcMain.handle(IPC.profiles.get, (_e, id: number): Profile | undefined => repo.getProfile(id))
-  ipcMain.handle(IPC.profiles.create, (_e, input: ProfileInput): Profile => repo.createProfile(input))
+  ipcMain.handle(IPC.profiles.create, (_e, input: ProfileInput): Profile =>
+    repo.createProfile(input)
+  )
   ipcMain.handle(
     IPC.profiles.update,
-    (_e, id: number, patch: Partial<ProfileInput>): Profile | undefined => repo.updateProfile(id, patch)
+    (_e, id: number, patch: Partial<ProfileInput>): Profile | undefined =>
+      repo.updateProfile(id, patch)
   )
   ipcMain.handle(IPC.profiles.remove, (_e, id: number): void => {
     repo.deleteProfile(id)
@@ -48,11 +58,12 @@ export function registerIpc(): void {
   ipcMain.handle(IPC.stages.paths, (): CareerPath[] => PATHS)
 
   // Progress
-  ipcMain.handle(
-    IPC.progress.get,
-    (_e, profileId: number, stageKey: string) => repo.getProgress(profileId, stageKey)
+  ipcMain.handle(IPC.progress.get, (_e, profileId: number, stageKey: string) =>
+    repo.getProgress(profileId, stageKey)
   )
-  ipcMain.handle(IPC.progress.listForProfile, (_e, profileId: number) => repo.listProgress(profileId))
+  ipcMain.handle(IPC.progress.listForProfile, (_e, profileId: number) =>
+    repo.listProgress(profileId)
+  )
   ipcMain.handle(
     IPC.progress.upsert,
     (_e, profileId: number, stageKey: string, patch: Record<string, unknown>) =>
@@ -60,14 +71,11 @@ export function registerIpc(): void {
   )
 
   // AI
-  ipcMain.handle(
-    IPC.ai.getSession,
-    (_e, profileId: number, stageKey: string): AISession => {
-      const existing = repo.getAISession(profileId, stageKey)
-      if (existing && existing.status === 'in_progress') return existing
-      return repo.createAISession(profileId, stageKey)
-    }
-  )
+  ipcMain.handle(IPC.ai.getSession, (_e, profileId: number, stageKey: string): AISession => {
+    const existing = repo.getAISession(profileId, stageKey)
+    if (existing && existing.status === 'in_progress') return existing
+    return repo.createAISession(profileId, stageKey)
+  })
 
   ipcMain.handle(
     IPC.ai.requestHint,
@@ -75,7 +83,8 @@ export function registerIpc(): void {
       const stage = getStage(stageKey)
       if (!stage) return 'This stage is missing. Try restarting the app.'
       let session = repo.getAISession(profileId, stageKey)
-      if (!session || session.status !== 'in_progress') session = repo.createAISession(profileId, stageKey)
+      if (!session || session.status !== 'in_progress')
+        session = repo.createAISession(profileId, stageKey)
       // generate
       const content = await requestHint(session, stage, failedAttempts)
       // persist (generate -> persist -> render)
@@ -115,7 +124,10 @@ export function registerIpc(): void {
         : session.conceptStruggles.length >= 2
           ? 'stuck'
           : session.status
-      repo.updateAISession(profileId, stageKeyStr, { conceptStruggles: struggles, status })
+      repo.updateAISession(profileId, stageKeyStr, {
+        conceptStruggles: struggles,
+        status
+      })
       if (ok) repo.completeAISession(profileId, stageKeyStr)
     }
   )
@@ -128,11 +140,19 @@ export function registerIpc(): void {
       stageKey: string,
       explanation: string,
       source: string
-    ): Promise<{ passed: boolean; feedback: string }> => {
+    ): Promise<{
+      passed: boolean
+      feedback: string
+    }> => {
       const stage = getStage(stageKey)
-      if (!stage) return { passed: false, feedback: 'This stage is missing.' }
+      if (!stage)
+        return {
+          passed: false,
+          feedback: 'This stage is missing.'
+        }
       let session = repo.getAISession(profileId, stageKey)
-      if (!session || session.status !== 'in_progress') session = repo.createAISession(profileId, stageKey)
+      if (!session || session.status !== 'in_progress')
+        session = repo.createAISession(profileId, stageKey)
       const result = await checkExplanation(session, stage, explanation, source)
       const history = [
         ...session.interactionHistory,
@@ -152,30 +172,103 @@ export function registerIpc(): void {
   )
 
   // Resources
-  ipcMain.handle(IPC.resources.list, (_e, path?: string) => (path ? resourcesForPath(path as never) : allResources()))
+  ipcMain.handle(IPC.resources.list, (_e, path?: string) =>
+    path ? resourcesForPath(path as never) : allResources()
+  )
 
-  // Multiplayer
+  // Streaks
+  ipcMain.handle(IPC.streak.get, (_e, profileId: number): Streak => repo.getStreak(profileId))
+  ipcMain.handle(IPC.streak.recordCompletion, (_e, profileId: number): Streak =>
+    repo.recordStreakCompletion(profileId)
+  )
+  ipcMain.handle(IPC.streak.increment, (_e, profileId: number): Streak =>
+    repo.incrementCompletionStreak(profileId)
+  )
+  ipcMain.handle(IPC.streak.reset, (_e, profileId: number): Streak =>
+    repo.resetCompletionStreak(profileId)
+  )
+  ipcMain.handle(IPC.streak.useFreeze, (_e, profileId: number): Streak =>
+    repo.useStreakFreeze(profileId)
+  )
+  ipcMain.handle(IPC.streak.addFreeze, (_e, profileId: number, count: number): Streak =>
+    repo.addStreakFreeze(profileId, count)
+  )
+
+  // XP
+  ipcMain.handle(IPC.xp.get, (_e, profileId: number): XPWallet => repo.getXP(profileId))
+  ipcMain.handle(IPC.xp.add, (_e, profileId: number, amount: number): XPWallet =>
+    repo.addXP(profileId, amount)
+  )
+
+  // Energy
+  ipcMain.handle(IPC.energy.get, (_e, profileId: number): EnergyState =>
+    repo.refillEnergyIfDue(profileId)
+  )
+  ipcMain.handle(IPC.energy.spend, (_e, profileId: number): EnergyState =>
+    repo.spendEnergy(profileId)
+  )
+  ipcMain.handle(IPC.energy.refund, (_e, profileId: number): EnergyState =>
+    repo.refundEnergy(profileId)
+  )
+  ipcMain.handle(IPC.energy.refillIfDue, (_e, profileId: number): EnergyState =>
+    repo.refillEnergyIfDue(profileId)
+  )
+
+  // Daily Quests
+  ipcMain.handle(IPC.quests.get, (_e, profileId: number, date?: string): DailyQuest[] =>
+    repo.getDailyQuests(profileId, date)
+  )
   ipcMain.handle(
-    IPC.multi.host,
-    (_e, settings: RoomSettings, hostName: string): RoomState => {
-      closeHost()
-      const code = settings.hostCode || randomRoomCode()
-      const merged = { ...settings, hostCode: code }
-      hostSession = new HostSession(
-        merged,
-        hostName,
-        (state) => broadcast(IPC.multi.state, state),
-        (message) => broadcast(IPC.multi.state, { type: 'error', message })
-      )
-      const st = hostSession.getState()
-      return {
-        roomCode: code,
-        hostId: st.hostId,
-        settings: merged,
-        players: st.players
-      }
+    IPC.quests.upsert,
+    (_e, profileId: number, quests: Omit<DailyQuest, 'profileId' | 'date'>[]): void => {
+      repo.upsertDailyQuests(profileId, quests)
     }
   )
+  ipcMain.handle(
+    IPC.quests.updateProgress,
+    (_e, profileId: number, questType: QuestType, increment: number): DailyQuest[] =>
+      repo.updateQuestProgress(profileId, questType, increment)
+  )
+  ipcMain.handle(
+    IPC.quests.claim,
+    (_e, profileId: number, questId: string): DailyQuest | undefined =>
+      repo.claimQuest(profileId, questId)
+  )
+
+  // Achievements
+  ipcMain.handle(IPC.achievements.list, (_e, profileId: number): Achievement[] =>
+    repo.getAchievements(profileId)
+  )
+  ipcMain.handle(IPC.achievements.grant, (_e, profileId: number, achievementId: string): boolean =>
+    repo.grantAchievement(profileId, achievementId)
+  )
+
+  // Multiplayer
+  ipcMain.handle(IPC.multi.host, (_e, settings: RoomSettings, hostName: string): RoomState => {
+    closeHost()
+    const code = settings.hostCode || randomRoomCode()
+    const merged = {
+      ...settings,
+      hostCode: code
+    }
+    hostSession = new HostSession(
+      merged,
+      hostName,
+      (state) => broadcast(IPC.multi.state, state),
+      (message) =>
+        broadcast(IPC.multi.state, {
+          type: 'error',
+          message
+        })
+    )
+    const st = hostSession.getState()
+    return {
+      roomCode: code,
+      hostId: st.hostId,
+      settings: merged,
+      players: st.players
+    }
+  })
   ipcMain.handle(IPC.multi.stopHosting, (): void => {
     closeHost()
   })
@@ -189,7 +282,11 @@ export function registerIpc(): void {
         name,
         roomCode,
         (state) => broadcast(IPC.multi.state, state),
-        (message) => broadcast(IPC.multi.state, { type: 'error', message })
+        (message) =>
+          broadcast(IPC.multi.state, {
+            type: 'error',
+            message
+          })
       )
     }
   )
@@ -217,9 +314,18 @@ export function registerIpc(): void {
   ipcMain.handle(IPC.app.getLang, (): string => getSetting('lang', 'en'))
   ipcMain.handle(IPC.app.setLang, (_e, lang: string): void => setSetting('lang', lang))
   ipcMain.handle(IPC.app.online, async (): Promise<boolean> => isOnline())
-  ipcMain.handle(IPC.app.getInfo, (): { version: string; groq: boolean } => {
-    return { version: '0.1.0', groq: hasGroqKey() }
-  })
+  ipcMain.handle(
+    IPC.app.getInfo,
+    (): {
+      version: string
+      groq: boolean
+    } => {
+      return {
+        version: '0.1.0',
+        groq: hasGroqKey()
+      }
+    }
+  )
 }
 
 function closeHost(): void {

@@ -1,11 +1,19 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, nativeImage } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { openDb, closeDb } from './db/index'
 import { registerIpc } from './ipc'
 
+// Disable SUID sandbox helper requirement on Linux dev environments
+if (process.platform === 'linux') {
+  app.commandLine.appendSwitch('no-sandbox')
+}
+
 function createWindow(): void {
+  // Build a nativeImage from the bundled asset so it works on all platforms
+  const appIcon = nativeImage.createFromPath(icon)
+
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 820,
@@ -14,7 +22,9 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     backgroundColor: '#FFF6E8',
-    ...(process.platform === 'linux' ? { icon } : {}),
+    // Pass icon on all platforms (Linux needs it at window level; Win/macOS use it too)
+    icon: appIcon,
+    title: 'CodeMaster',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -22,13 +32,20 @@ function createWindow(): void {
     }
   })
 
+  // macOS dock icon
+  if (process.platform === 'darwin' && app.dock) {
+    app.dock.setIcon(appIcon)
+  }
+
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
-    return { action: 'deny' }
+    return {
+      action: 'deny'
+    }
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {

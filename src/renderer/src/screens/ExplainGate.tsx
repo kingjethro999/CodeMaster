@@ -22,7 +22,10 @@ export function ExplainGate({
   const { activeProfile, isGuest, updateGuestProgress } = useApp()
   const [explanation, setExplanation] = useState('')
   const [checking, setChecking] = useState(false)
-  const [result, setResult] = useState<{ passed: boolean; feedback: string } | null>(null)
+  const [result, setResult] = useState<{
+    passed: boolean
+    feedback: string
+  } | null>(null)
 
   const check = async (): Promise<void> => {
     if (explanation.trim().length < 5 || checking) return
@@ -54,14 +57,27 @@ export function ExplainGate({
   }
 
   return (
-    <div className="col" style={{ gap: 16 }}>
+    <div
+      className="col"
+      role="region"
+      aria-label={t('explain.title')}
+      style={{
+        gap: 16
+      }}
+    >
       <h3>{t('explain.title')}</h3>
       <p>{t('explain.prompt')}</p>
-      <p className="muted" style={{ fontSize: 14 }}>
+      <p
+        className="muted"
+        style={{
+          fontSize: 14
+        }}
+      >
         {t('explain.hint')}
       </p>
       <textarea
         className="textarea"
+        aria-label={t('explain.placeholder')}
         placeholder={t('explain.placeholder')}
         value={explanation}
         onChange={(e) => setExplanation(e.target.value)}
@@ -69,17 +85,18 @@ export function ExplainGate({
         disabled={result?.passed === true}
       />
       {result && (
-        <div className={`notice ${result.passed ? 'notice-success' : 'notice-error'}`}>
+        <div className={`notice ${result.passed ? 'notice-success' : 'notice-error'}`} role={result.passed ? 'status' : 'alert'}>
           {result.passed ? t('explain.checkPassed') : t('explain.checkFailed')}
           {!result.passed && result.feedback && <span> — {result.feedback}</span>}
         </div>
       )}
       <div className="row spread">
-        <button className="btn btn-ghost" onClick={onSkip} disabled={checking}>
+        <button className="btn btn-ghost" aria-label={t('explain.explainLater')} onClick={onSkip} disabled={checking}>
           {t('explain.explainLater')}
         </button>
         <button
           className="btn btn-success"
+          aria-label={t('explain.submit')}
           onClick={() => void check()}
           disabled={explanation.trim().length < 5 || checking || result?.passed === true}
         >
