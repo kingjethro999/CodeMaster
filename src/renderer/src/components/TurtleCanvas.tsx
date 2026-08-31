@@ -60,5 +60,13 @@ export function TurtleCanvas({ result }: { result: RunResult | null }): React.JS
     g.stroke()
   }, [result])
 
-  return <canvas ref={ref} width={SIZE} height={SIZE} className="turtle-canvas" aria-label="Turtle drawing canvas" />
+  return (
+    <canvas
+      ref={ref}
+      width={SIZE}
+      height={SIZE}
+      className="turtle-canvas"
+      aria-label="Turtle drawing canvas"
+    />
+  )
 }

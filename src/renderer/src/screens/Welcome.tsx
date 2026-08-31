@@ -12,37 +12,93 @@ export function Welcome(): React.JSX.Element {
 
   const startGuest = (): void => {
     enterGuest(guestName.trim() || t('common.guest'))
-    go({ name: 'home' })
+    go({
+      name: 'home'
+    })
   }
 
   return (
-    <div className="col center" style={{ gap: 28, height: '100%' }}>
-      <div className="col center" style={{ gap: 8 }}>
+    <div
+      className="col center"
+      role="main"
+      aria-label={t('welcome.title')}
+      style={{
+        gap: 28,
+        height: '100%'
+      }}
+    >
+      <div
+        className="col center"
+        style={{
+          gap: 8
+        }}
+      >
         <Mascot size={140} />
         <h1>{t('common.appName')}</h1>
-        <p className="muted" style={{ fontSize: 17 }}>
+        <p
+          className="muted"
+          style={{
+            fontSize: 17
+          }}
+        >
           {t('common.tagline')}
         </p>
       </div>
 
       {profiles.length > 0 && !guestMode && (
-        <div className="col" style={{ width: '100%', maxWidth: 460, gap: 16 }}>
-          <div className="col" style={{ gap: 12 }}>
+        <div
+          className="col"
+          style={{
+            width: '100%',
+            maxWidth: 460,
+            gap: 16
+          }}
+        >
+          <div
+            className="col"
+            style={{
+              gap: 12
+            }}
+          >
             <h3>{t('welcome.existing')}</h3>
             {profiles.map((p) => (
               <button
                 key={p.id}
                 className="card-flat row spread"
-                style={{ cursor: 'pointer', border: 'none', textAlign: 'left', width: '100%' }}
+                aria-label={`${p.name}, ${t(`paths.${p.careerPath}.name`)}. ${t('common.continue')}`}
+                style={{
+                  cursor: 'pointer',
+                  border: 'none',
+                  textAlign: 'left',
+                  width: '100%'
+                }}
                 onClick={() => {
                   setActiveProfile(p)
-                  go({ name: 'home' })
+                  go({
+                    name: 'home'
+                  })
                 }}
               >
-                <div className="row" style={{ gap: 12 }}>
+                <div
+                  className="row"
+                  style={{
+                    gap: 12
+                  }}
+                >
                   <Avatar id={p.avatar} size={48} />
-                  <div className="col" style={{ gap: 2 }}>
-                    <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 17 }}>
+                  <div
+                    className="col"
+                    style={{
+                      gap: 2
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-display)',
+                        fontWeight: 600,
+                        fontSize: 17
+                      }}
+                    >
                       {p.name}
                     </span>
                     <span className="muted">{t(`paths.${p.careerPath}.name`)}</span>
@@ -53,7 +109,14 @@ export function Welcome(): React.JSX.Element {
             ))}
           </div>
           <div className="row spread">
-            <button className="btn" onClick={() => go({ name: 'onboarding' })}>
+            <button
+              className="btn"
+              onClick={() =>
+                go({
+                  name: 'onboarding'
+                })
+              }
+            >
               {t('welcome.createProfile')}
             </button>
             <button className="btn btn-ghost" onClick={() => setGuestMode(true)}>
@@ -64,8 +127,20 @@ export function Welcome(): React.JSX.Element {
       )}
 
       {profiles.length === 0 && !guestMode && (
-        <div className="row wrap center" style={{ gap: 16 }}>
-          <button className="btn btn-primary btn-lg" onClick={() => go({ name: 'onboarding' })}>
+        <div
+          className="row wrap center"
+          style={{
+            gap: 16
+          }}
+        >
+          <button
+            className="btn btn-primary btn-lg"
+            onClick={() =>
+              go({
+                name: 'onboarding'
+              })
+            }
+          >
             {t('welcome.createProfile')}
           </button>
           <button className="btn btn-lg" onClick={() => setGuestMode(true)}>
@@ -75,10 +150,18 @@ export function Welcome(): React.JSX.Element {
       )}
 
       {guestMode && (
-        <div className="card col" style={{ width: '100%', maxWidth: 420, gap: 16 }}>
+        <div
+          className="card col"
+          style={{
+            width: '100%',
+            maxWidth: 420,
+            gap: 16
+          }}
+        >
           <p>{t('welcome.guestDescription')}</p>
           <input
             className="input"
+            aria-label={t('profile.namePlaceholder')}
             placeholder={t('profile.namePlaceholder')}
             value={guestName}
             onChange={(e) => setGuestName(e.target.value)}

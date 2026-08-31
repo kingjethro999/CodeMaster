@@ -3,14 +3,25 @@
 
 let ctx: AudioContext | null = null
 let enabled = true
+let audioSpeed = 1
 
 export function setSoundEnabled(enabledFlag: boolean): void {
   enabled = enabledFlag
 }
 
+export function setAudioSpeed(speed: number): void {
+  audioSpeed = Math.max(0.5, Math.min(2, speed))
+}
+
 function getCtx(): AudioContext | null {
   if (typeof window === 'undefined') return null
-  const AC = window.AudioContext ?? (window as never as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+  const AC =
+    window.AudioContext ??
+    (
+      window as never as {
+        webkitAudioContext?: typeof AudioContext
+      }
+    ).webkitAudioContext
   if (!AC) return null
   if (!ctx) ctx = new AC()
   if (ctx.state === 'suspended') void ctx.resume()
@@ -36,7 +47,8 @@ function tone(freq: number, start: number, duration: number, volume: number): vo
 function play(notes: number[], spacing: number, volume: number): void {
   if (!enabled) return
   try {
-    notes.forEach((f, i) => tone(f, i * spacing, 0.18, volume))
+    const adjustedSpacing = spacing / audioSpeed
+    notes.forEach((f, i) => tone(f, i * adjustedSpacing, 0.18 / audioSpeed, volume))
   } catch {
     // audio is best-effort
   }

@@ -1,7 +1,10 @@
-appId: com.electron.app
-productName: codemaster
+appId: com.codemaster.app
+productName: CodeMaster
+# build/ is the buildResources dir — icon.png, icon.icns, icon.ico live there
 directories:
   buildResources: build
+# Explicit icon path (electron-builder auto-detects build/icon.* but being explicit avoids confusion)
+icon: build/icon.png
 files:
   - '!**/.vscode/*'
   - '!src/*'
@@ -13,12 +16,14 @@ asarUnpack:
   - resources/**
 win:
   executableName: codemaster
+  icon: build/icon.ico
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
 mac:
+  icon: build/icon.icns
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
@@ -29,12 +34,12 @@ mac:
 dmg:
   artifactName: ${name}-${version}.${ext}
 linux:
+  icon: build/icon.png
   target:
     - AppImage
-    - snap
     - deb
-  maintainer: electronjs.org
-  category: Utility
+  maintainer: kingjethro999
+  category: Education
 appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false

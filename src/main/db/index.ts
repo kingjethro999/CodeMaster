@@ -50,8 +50,55 @@ CREATE TABLE IF NOT EXISTS app_settings (
   value TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS streaks (
+  profile_id INTEGER PRIMARY KEY,
+  current_completion_streak INTEGER NOT NULL DEFAULT 0,
+  best_completion_streak INTEGER NOT NULL DEFAULT 0,
+  current_daily_streak INTEGER NOT NULL DEFAULT 0,
+  best_daily_streak INTEGER NOT NULL DEFAULT 0,
+  last_active_date TEXT,
+  streak_freezes INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS xp_wallet (
+  profile_id INTEGER PRIMARY KEY,
+  total_xp INTEGER NOT NULL DEFAULT 0,
+  level INTEGER NOT NULL DEFAULT 1,
+  level_xp INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS energy (
+  profile_id INTEGER PRIMARY KEY,
+  current_energy INTEGER NOT NULL DEFAULT 25,
+  max_energy INTEGER NOT NULL DEFAULT 25,
+  last_refill_date TEXT
+);
+
+CREATE TABLE IF NOT EXISTS daily_quests (
+  id TEXT PRIMARY KEY,
+  profile_id INTEGER NOT NULL,
+  date TEXT NOT NULL,
+  quest_type TEXT NOT NULL,
+  description_key TEXT NOT NULL,
+  target INTEGER NOT NULL DEFAULT 1,
+  progress INTEGER NOT NULL DEFAULT 0,
+  completed INTEGER NOT NULL DEFAULT 0,
+  claimed INTEGER NOT NULL DEFAULT 0,
+  reward_xp INTEGER NOT NULL DEFAULT 10,
+  UNIQUE (profile_id, date, quest_type)
+);
+
+CREATE TABLE IF NOT EXISTS achievements (
+  profile_id INTEGER NOT NULL,
+  achievement_id TEXT NOT NULL,
+  earned_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (profile_id, achievement_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_progress_profile ON progress(profile_id);
 CREATE INDEX IF NOT EXISTS idx_ai_profile ON ai_exercise_sessions(profile_id);
+CREATE INDEX IF NOT EXISTS idx_daily_quests_profile ON daily_quests(profile_id, date);
+CREATE INDEX IF NOT EXISTS idx_achievements_profile ON achievements(profile_id);
 `
 
 let db: Database.Database | null = null
@@ -80,14 +127,18 @@ export function getConn(): Database.Database {
 }
 
 export function getSetting(key: string, fallback: string): string {
-  const row = getConn()
-    .prepare('SELECT value FROM app_settings WHERE key = ?')
-    .get(key) as { value: string } | undefined
+  const row = getConn().prepare('SELECT value FROM app_settings WHERE key = ?').get(key) as
+    | {
+        value: string
+      }
+    | undefined
   return row?.value ?? fallback
 }
 
 export function setSetting(key: string, value: string): void {
   getConn()
-    .prepare('INSERT INTO app_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value')
+    .prepare(
+      'INSERT INTO app_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+    )
     .run(key, value)
 }
