@@ -3,7 +3,9 @@
 import confetti from 'canvas-confetti'
 import { useRef } from 'react'
 
-export function useConfetti(): { fire: () => void } {
+export function useConfetti(): {
+  fire: () => void
+} {
   const fired = useRef(0)
 
   const fire = (): void => {
@@ -20,7 +22,10 @@ export function useConfetti(): { fire: () => void } {
           particleCount: 70,
           angle: delay,
           spread: 60,
-          origin: { x: 0.5, y: 0.4 },
+          origin: {
+            x: 0.5,
+            y: 0.4
+          },
           colors,
           disableForReducedMotion: true
         })
@@ -28,5 +33,7 @@ export function useConfetti(): { fire: () => void } {
     }
   }
 
-  return { fire }
+  return {
+    fire
+  }
 }
